@@ -8,7 +8,6 @@ use jito_protos::auth::{
     GenerateAuthTokensRequest, RefreshAccessTokenRequest, Role, Token,
 };
 use prost_types::Timestamp;
-use solana_metrics::datapoint_info;
 use solana_sdk::signature::{Keypair, Signer};
 use tokio::{task::JoinHandle, time::sleep};
 use tonic::{service::Interceptor, transport::Channel, Request, Status};
@@ -109,7 +108,7 @@ impl ClientInterceptor {
                 ) {
                     // re-run entire auth workflow is refresh token expiring soon
                     (true, _) => {
-                        let is_error = {
+                        {
                             if let Ok((new_access_token, new_refresh_token)) =
                                 Self::auth(&mut auth_service_client, &keypair, role).await
                             {
@@ -121,11 +120,10 @@ impl ClientInterceptor {
                                 true
                             }
                         };
-                        datapoint_info!("searcher-full-auth", ("is_error", is_error, bool));
                     }
                     // re-up the access token if it expires soon
                     (_, true) => {
-                        let is_error = {
+                        {
                             if let Ok(refresh_resp) = auth_service_client
                                 .refresh_access_token(RefreshAccessTokenRequest {
                                     refresh_token: refresh_token.value.clone(),
@@ -140,8 +138,6 @@ impl ClientInterceptor {
                                 true
                             }
                         };
-
-                        datapoint_info!("searcher-refresh-auth", ("is_error", is_error, bool));
                     }
                     _ => {
                         sleep(Duration::from_secs(60)).await;
