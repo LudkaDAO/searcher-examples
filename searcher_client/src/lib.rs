@@ -21,6 +21,7 @@ use tonic::{
 };
 
 use crate::token_authenticator::ClientInterceptor;
+use yellowstone_grpc_client::ClientTlsConfig;
 
 pub mod token_authenticator;
 
@@ -77,7 +78,8 @@ pub async fn get_searcher_client_no_auth(
 pub async fn create_grpc_channel(url: &str) -> BlockEngineConnectionResult<Channel> {
     let mut endpoint = Endpoint::from_shared(url.to_string()).expect("invalid url");
     if url.starts_with("https") {
-        endpoint = endpoint.tls_config(tonic::transport::ClientTlsConfig::new().with_native_roots())?;
+        // endpoint = endpoint.tls_config(tonic::transport::ClientTlsConfig::new().with_native_roots())?;
+        endpoint = endpoint.tls_config(ClientTlsConfig::new().with_native_roots())?;
     }
     endpoint = endpoint.tcp_nodelay(true);
     endpoint = endpoint.tcp_keepalive(Some(Duration::from_secs(10)));
